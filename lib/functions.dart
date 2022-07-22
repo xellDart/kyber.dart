@@ -71,7 +71,7 @@ class KyberFunctions {
     return value % (4294967296);
   }
 
-  static bool compareArray(a, b) {
+  static bool compareArray(List<int> a, List<int> b) {
     if (a.length != b.length) {
       return false;
     }
@@ -85,28 +85,22 @@ class KyberFunctions {
 
   static List<int> compress1(KyberLevel level, List<List<int>> u) {
     int rr = 0;
-    List<int> r = List.filled(1408, 0); // 4 * 352
-    List<int> t = List.filled(8, 0);
+    List<int> r = List.filled(960, 0); // 4 * 352
+    List<int> t = List.filled(4, 0);
     for (int i = 0; i < paramsK(level); i++) {
-      for (int j = 0; j < paramsN / 8; j++) {
-        for (int k = 0; k < 8; k++) {
+      for (int j = 0; j < paramsN / 4; j++) {
+        for (int k = 0; k < 4; k++) {
           t[k] = uint16(
-              (((uint32(u[i][8 * j + k]) << 11 >>> 0) + uint32(paramsQ ~/ 2)) ~/
+              (((uint32(u[i][4 * j + k]) << 10) + uint32(paramsQ ~/ 2)) ~/
                       uint32(paramsQ)) &
-                  0x7ff >>> 0);
+                  0x3ff);
         }
-        r[rr + 0] = byte((t[0] >> 0));
-        r[rr + 1] = byte((t[0] >> 8) | (t[1] << 3));
-        r[rr + 2] = byte((t[1] >> 5) | (t[2] << 6));
-        r[rr + 3] = byte((t[2] >> 2));
-        r[rr + 4] = byte((t[2] >> 10) | (t[3] << 1));
-        r[rr + 5] = byte((t[3] >> 7) | (t[4] << 4));
-        r[rr + 6] = byte((t[4] >> 4) | (t[5] << 7));
-        r[rr + 7] = byte((t[5] >> 1));
-        r[rr + 8] = byte((t[5] >> 9) | (t[6] << 2));
-        r[rr + 9] = byte((t[6] >> 6) | (t[7] << 5));
-        r[rr + 10] = byte((t[7] >> 3));
-        rr = rr + 11;
+        r[rr + 0] = byte(t[0] >> 0);
+        r[rr + 1] = byte((t[0] >> 8) | (t[1] << 2));
+        r[rr + 2] = byte((t[1] >> 6) | (t[2] << 4));
+        r[rr + 3] = byte((t[2] >> 4) | (t[3] << 6));
+        r[rr + 4] = byte((t[3] >> 2));
+        rr = rr + 5;
       }
     }
     return r;
@@ -114,21 +108,20 @@ class KyberFunctions {
 
   static List<int> compress2(List<int> v) {
     int rr = 0;
-    List<int> r = List.filled(160, 0);
+    List<int> r = List.filled(128, 0);
     List<int> t = List.filled(8, 0);
     for (int i = 0; i < paramsN / 8; i++) {
       for (int j = 0; j < 8; j++) {
         t[j] = byte(
-                ((uint32(v[8 * i + j]) << 5 >>> 0) + uint32(paramsQ ~/ 2)) ~/
-                    uint32(paramsQ)) &
-            31;
+                ((uint32(v[8 * i + j]) << 4) + uint32(paramsQ ~/ 2)) ~/
+                    uint32(paramsQ),) &
+            0xf;
       }
-      r[rr + 0] = byte((t[0] >> 0) | (t[1] << 5));
-      r[rr + 1] = byte((t[1] >> 3) | (t[2] << 2) | (t[3] << 7));
-      r[rr + 2] = byte((t[3] >> 1) | (t[4] << 4));
-      r[rr + 3] = byte((t[4] >> 4) | (t[5] << 1) | (t[6] << 6));
-      r[rr + 4] = byte((t[6] >> 2) | (t[7] << 3));
-      rr = rr + 5;
+      r[rr + 0] = t[0] | (t[1] << 4);
+      r[rr + 1] = t[2] | (t[3] << 4);
+      r[rr + 2] = t[4] | (t[5] << 4);
+      r[rr + 3] = t[6] | (t[7] << 4);
+      rr = rr + 4;
     }
     return r;
   }
